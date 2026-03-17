@@ -296,7 +296,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                                         ],
                                       ),
                                     ),
-                                  if (lead.website != null)
+                                  if (lead.website != null && lead.website!.isNotEmpty)
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 12),
                                       child: Row(
@@ -317,18 +317,20 @@ class _LeadsScreenState extends State<LeadsScreen> {
                                   const Divider(),
                                   
                                   // Action Buttons
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    alignment: WrapAlignment.spaceEvenly,
                                     children: [
                                       TextButton.icon(
-                                        onPressed: lead.phoneNumber != null ? () => _callLead(lead.phoneNumber!) : null,
+                                        onPressed: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _callLead(lead.phoneNumber!) : null,
                                         icon: const Icon(Icons.call, color: Colors.green),
                                         label: const Text('Call'),
                                       ),
                                       TextButton.icon(
-                                        onPressed: lead.phoneNumber != null ? () => _whatsappLead(lead) : null,
+                                        onPressed: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _whatsappLead(lead) : null,
                                         icon: const Icon(Icons.message, color: Colors.teal),
-                                        label: const Text('WhatsApp'),
+                                        label: const Text('Message'),
                                       ),
                                       TextButton.icon(
                                         onPressed: () => _showStatusDialog(lead),
