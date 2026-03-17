@@ -129,11 +129,21 @@ class _LeadsScreenState extends State<LeadsScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Converted': return Colors.green;
-      case 'Not Converted': return Colors.orange;
-      case 'Bad Lead': return Colors.red;
+      case 'Converted': return const Color(0xFF10B981); // emerald-500
+      case 'Not Converted': return const Color(0xFFF59E0B); // amber-500
+      case 'Bad Lead': return const Color(0xFFEF4444); // red-500
       case 'Uncontacted':
-      default: return Colors.grey;
+      default: return const Color(0xFF1337EC); // primary
+    }
+  }
+
+  Color _getStatusBgColor(String status) {
+    switch (status) {
+      case 'Converted': return const Color(0xFF10B981).withAlpha(25);
+      case 'Not Converted': return const Color(0xFFF59E0B).withAlpha(25);
+      case 'Bad Lead': return const Color(0xFFEF4444).withAlpha(25);
+      case 'Uncontacted':
+      default: return const Color(0xFF1337EC).withAlpha(25);
     }
   }
 
@@ -232,115 +242,181 @@ class _LeadsScreenState extends State<LeadsScreen> {
                         padding: const EdgeInsets.all(12),
                         itemBuilder: (context, index) {
                           final lead = _leads[index];
-                          return Card(
-                            elevation: 3,
+                          final primaryColor = const Color(0xFF1337EC);
+                          
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Header: Name and Status Badge
-                                  Row(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(10),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          lead.name,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(lead.status).withAlpha(25),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: _getStatusColor(lead.status)),
-                                        ),
-                                        child: Text(
-                                          lead.status,
-                                          style: TextStyle(
-                                            color: _getStatusColor(lead.status),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  
-                                  // Details
-                                  if (lead.phoneNumber != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.phone, size: 16, color: Colors.grey),
-                                          const SizedBox(width: 8),
-                                          Text(lead.phoneNumber!, style: const TextStyle(fontSize: 14)),
-                                        ],
-                                      ),
-                                    ),
-                                  if (lead.address != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                                          const SizedBox(width: 8),
-                                          Expanded(child: Text(lead.address!, style: const TextStyle(fontSize: 14, color: Colors.grey))),
-                                        ],
-                                      ),
-                                    ),
-                                  if (lead.website != null && lead.website!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.language, size: 16, color: Colors.grey),
-                                          const SizedBox(width: 8),
                                           Expanded(
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                  height: 48,
+                                                  width: 48,
+                                                  decoration: BoxDecoration(
+                                                    color: primaryColor.withAlpha(25),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Icon(Icons.business, color: primaryColor),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        lead.name,
+                                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, height: 1.1),
+                                                      ),
+                                                      if (lead.website != null && lead.website!.isNotEmpty)
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: Text(
+                                                            lead.website!,
+                                                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: _getStatusBgColor(lead.status),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
                                             child: Text(
-                                              lead.website!, 
-                                              style: const TextStyle(fontSize: 14, color: Colors.blue, decoration: TextDecoration.underline),
-                                              overflow: TextOverflow.ellipsis,
-                                            )
+                                              lead.status.toUpperCase(),
+                                              style: TextStyle(
+                                                color: _getStatusColor(lead.status),
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    ),
-
-                                  const Divider(),
-                                  
-                                  // Action Buttons
-                                  Wrap(
-                                    spacing: 8.0,
-                                    runSpacing: 4.0,
-                                    alignment: WrapAlignment.spaceEvenly,
-                                    children: [
-                                      TextButton.icon(
-                                        onPressed: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _callLead(lead.phoneNumber!) : null,
-                                        icon: const Icon(Icons.call, color: Colors.green),
-                                        label: const Text('Call'),
-                                      ),
-                                      TextButton.icon(
-                                        onPressed: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _whatsappLead(lead) : null,
-                                        icon: const Icon(Icons.message, color: Colors.teal),
-                                        label: const Text('Message'),
-                                      ),
-                                      TextButton.icon(
-                                        onPressed: () => _showStatusDialog(lead),
-                                        icon: const Icon(Icons.edit, color: Colors.orange),
-                                        label: const Text('Status'),
-                                      ),
+                                      const SizedBox(height: 16),
+                                      
+                                      // Details
+                                      if (lead.phoneNumber != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.call, size: 16, color: Colors.grey.shade600),
+                                              const SizedBox(width: 8),
+                                              Text(lead.phoneNumber!, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                                            ],
+                                          ),
+                                        ),
+                                      if (lead.address != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
+                                              const SizedBox(width: 8),
+                                              Expanded(child: Text(lead.address!, style: TextStyle(fontSize: 14, color: Colors.grey.shade700))),
+                                            ],
+                                          ),
+                                        ),
                                     ],
-                                  )
-                                ],
-                              ),
+                                  ),
+                                ),
+                                // Action Buttons (Bottom Bar)
+                                Container(
+                                  decoration: BoxDecoration(
+                                     border: Border(top: BorderSide(color: Colors.grey.shade200))
+                                  ),
+                                  child: IntrinsicHeight(
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _callLead(lead.phoneNumber!) : null,
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                   Icon(Icons.call, color: primaryColor, size: 20),
+                                                   const SizedBox(width: 8),
+                                                   Text('Call', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                                ],
+                                              ),
+                                            )
+                                          ),
+                                        ),
+                                        VerticalDivider(width: 1, color: Colors.grey.shade200),
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: lead.phoneNumber != null && lead.phoneNumber!.isNotEmpty ? () => _whatsappLead(lead) : null,
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                   Icon(Icons.message, color: primaryColor, size: 20),
+                                                   const SizedBox(width: 8),
+                                                   Text('Message', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                                ],
+                                              ),
+                                            )
+                                          ),
+                                        ),
+                                        VerticalDivider(width: 1, color: Colors.grey.shade200),
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => _showStatusDialog(lead),
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                   Icon(Icons.assignment, color: primaryColor, size: 20),
+                                                   const SizedBox(width: 8),
+                                                   Text('Status', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                                ],
+                                              ),
+                                            )
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },

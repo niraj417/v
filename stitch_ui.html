@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Leads CRM Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1337ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(146, 155, 201, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-primary/20">
+<div class="flex items-center p-4 justify-between max-w-5xl mx-auto w-full">
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-primary/20 rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-xl font-bold tracking-tight">My Leads</h2>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-primary/20 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 border border-primary/20">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Search and Filter Section -->
+<div class="w-full max-w-5xl mx-auto px-4 pt-6 pb-2">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
+</div>
+<input class="block w-full pl-12 pr-4 py-3 bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-base placeholder-slate-400 dark:placeholder-slate-500" placeholder="Search leads by name, email or company..." type="text"/>
+</div>
+<div class="flex gap-2 mt-4 overflow-x-hidden flex-wrap">
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-primary text-white text-sm font-medium shadow-lg shadow-primary/20">
+                All
+            </button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-slate-200 dark:bg-primary/10 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-300 dark:hover:bg-primary/20 transition-colors">
+                Converted
+            </button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-slate-200 dark:bg-primary/10 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-300 dark:hover:bg-primary/20 transition-colors">
+                Bad Lead
+            </button>
+<button class="flex h-9 items-center justify-center px-5 rounded-full bg-slate-200 dark:bg-primary/10 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-300 dark:hover:bg-primary/20 transition-colors">
+                Follow-up
+            </button>
+</div>
+</div>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto custom-scrollbar px-4 py-4 max-w-5xl mx-auto w-full space-y-4">
+<!-- Lead Card 1 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="p-5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">business</span>
+</div>
+<div>
+<h3 class="text-lg font-bold leading-none">TechFlow Solutions</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">techflow.io</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full uppercase tracking-wider">New</span>
+</div>
+<div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">call</span>
+<span>+1 (555) 0123</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span>123 Innovation Way, San Francisco, CA</span>
+</div>
+</div>
+</div>
+<div class="flex border-t border-slate-100 dark:border-primary/10 divide-x divide-slate-100 dark:divide-primary/10">
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">call</span> Call
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">chat</span> Message
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">assignment</span> Status
+                </button>
+</div>
+</div>
+<!-- Lead Card 2 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="p-5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">apartment</span>
+</div>
+<div>
+<h3 class="text-lg font-bold leading-none">Global Logistics Inc.</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">globallogistics.com</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-full uppercase tracking-wider">Follow-up</span>
+</div>
+<div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">call</span>
+<span>+1 (555) 9876</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span>456 Supply Chain Blvd, Chicago, IL</span>
+</div>
+</div>
+</div>
+<div class="flex border-t border-slate-100 dark:border-primary/10 divide-x divide-slate-100 dark:divide-primary/10">
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">call</span> Call
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">chat</span> Message
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">assignment</span> Status
+                </button>
+</div>
+</div>
+<!-- Lead Card 3 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="p-5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">store</span>
+</div>
+<div>
+<h3 class="text-lg font-bold leading-none">Apex Retail Group</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">apexretail.net</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-primary/10 text-primary dark:text-primary text-xs font-bold rounded-full uppercase tracking-wider">Converted</span>
+</div>
+<div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">call</span>
+<span>+1 (555) 4433</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span>789 Commerce St, New York, NY</span>
+</div>
+</div>
+</div>
+<div class="flex border-t border-slate-100 dark:border-primary/10 divide-x divide-slate-100 dark:divide-primary/10">
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">call</span> Call
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">chat</span> Message
+                </button>
+<button class="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-primary/10 transition-colors text-primary font-semibold text-sm">
+<span class="material-symbols-outlined text-lg">assignment</span> Status
+                </button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<footer class="bg-white dark:bg-primary/10 border-t border-slate-200 dark:border-primary/20 pb-safe">
+<div class="flex gap-2 px-4 pb-3 pt-2 max-w-5xl mx-auto">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">group</span>
+<p class="text-[10px] font-bold uppercase tracking-widest">Leads</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<p class="text-[10px] font-medium uppercase tracking-widest">Analytics</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<p class="text-[10px] font-medium uppercase tracking-widest">Tasks</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-1 text-slate-500 dark:text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-[10px] font-medium uppercase tracking-widest">Settings</p>
+</a>
+</div>
+</footer>
+</body></html>

@@ -63,55 +63,55 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       (function() {
         var results = [];
         
-        // Google Maps Standard Results Feed
-        var elements = document.querySelectorAll('div[role="feed"] > div > div > a');
+        // Robust selector: Google Maps almost always uses 'a' tags with hrefs pointing to /maps/place/ for businesses
+        var placeLinks = document.querySelectorAll('a[href*="/maps/place/"]');
         
-        if (elements.length === 0) {
-           elements = document.querySelectorAll('.tIqj1b'); // Alternative class used occasionally
-        }
-
-        elements.forEach(function(el) {
-           var parent = el.closest('div');
+        placeLinks.forEach(function(el) {
+           var nameMatch = el.getAttribute('aria-label');
+           if (!nameMatch) {
+              nameMatch = el.innerText.split('\\n')[0];
+           }
+           if (!nameMatch) return;
+           
+           // The parent container holds the rich text containing phone, address, rating
+           var parent = el.closest('div[role="article"]') || el.parentElement.parentElement.parentElement;
            if (!parent) return;
+           
            var textContent = parent.innerText;
            if (!textContent) return;
            
-           var nameMatch = textContent.split('\\n')[0];
-           
-           // Simple regex for phone numbers in the text block (e.g. +1 555-123-4567, (123) 456-7890)
+           // Regex for phone numbers
            var phoneRegex = /\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}/g;
            var phones = textContent.match(phoneRegex);
            
            var phoneStr = null;
            if (phones && phones.length > 0) {
-             // Filter out obvious false positives like hours or short digits
-             var filtered = phones.filter(p => p.length >= 10);
+             var filtered = phones.filter(p => p.trim().length >= 10);
              if (filtered.length > 0) phoneStr = filtered[0].trim();
            }
            
-           // Try to parse rating
-           var ratingMatch = textContent.match(/(\\d\\.\\d)\\s*\\(\\d+\\)/);
+           // Parse rating
+           var ratingMatch = textContent.match(/(\\d\\.\\d)\\s*\\(\\d+\\)/) || textContent.match(/(\\d\\.\\d)\\s*stars?/i);
            var rating = ratingMatch ? parseFloat(ratingMatch[1]) : null;
 
            if (nameMatch && phoneStr && !results.some(r => r.name === nameMatch)) {
-             // Using phone number + name hash as a simple placeId since we don't have the real API one
              var uniqueId = nameMatch.replace(/[^a-zA-Z0-9]/g, '') + '_' + phoneStr.replace(/[^0-9]/g, '');
              results.push({ 
                 placeId: uniqueId,
                 name: nameMatch, 
                 phoneNumber: phoneStr, 
-                address: textContent.substring(0, Math.min(textContent.length, 100)) + '...', // Store raw text snippet
+                address: textContent.substring(0, Math.min(textContent.length, 100)).replace(/\\n/g, ', ') + '...',
                 rating: rating
              });
            }
         });
         
-        // Scroll down to load more maps results automatically
-        var feed = document.querySelector('div[role="feed"]');
-        if (feed) {
-          feed.scrollBy(0, 800);
+        // Scroll logic targeting the feed container or fallback to window
+        var scrollContainer = document.querySelector('div[role="feed"]') || document.querySelector('.m6QErb.DxyBCb.kA9KIf.dS8AEf');
+        if (scrollContainer) {
+          scrollContainer.scrollBy(0, 1000);
         } else {
-          window.scrollBy(0, 800);
+          window.scrollBy(0, 1000);
         }
 
         return JSON.stringify(results);
