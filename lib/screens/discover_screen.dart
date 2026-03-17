@@ -36,6 +36,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         const SnackBar(content: Text('Please enter both keyword and location')),
       );
       return;
+    }
     
     setState(() {
       _isScraping = true;
