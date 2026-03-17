@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert';
 import '../models/lead.dart';
+import '../services/database_service.dart';
 
 class LeadsScreen extends StatefulWidget {
   const LeadsScreen({super.key});
@@ -13,17 +12,23 @@ class LeadsScreen extends StatefulWidget {
 }
 
 class _LeadsScreenState extends State<LeadsScreen> {
-  final List<Lead> _leads = [];
-  bool _isScraping = false;
-  String? _keyword;
-  String? _location;
-  InAppWebViewController? webViewController;
+  List<Lead> _leads = [];
+  String _selectedStatus = 'All';
+  final List<String> _statusOptions = ['All', 'Uncontacted', 'Converted', 'Not Converted', 'Bad Lead'];
   String _templateMessage = '';
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadTemplate();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    await _loadTemplate();
+    await _fetchLeads();
+    setState(() => _isLoading = false);
   }
 
   Future<void> _loadTemplate() async {
@@ -31,22 +36,19 @@ class _LeadsScreenState extends State<LeadsScreen> {
     _templateMessage = prefs.getString('whatsapp_template') ?? 'Hi [Name], we would love to connect with you!';
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (args != null && _keyword == null) {
-      _keyword = args['keyword'];
-      _location = args['location'];
-      _startScraping();
+  Future<void> _fetchLeads() async {
+    if (_selectedStatus == 'All') {
+      _leads = await DatabaseService.instance.readAllLeads();
+    } else {
+      _leads = await DatabaseService.instance.readLeadsByStatus(_selectedStatus);
     }
+    setState(() {});
   }
 
-  void _startScraping() {
-    setState(() {
-      _isScraping = true;
-      _leads.clear();
-    });
+  Future<void> _updateLeadStatus(Lead lead, String newStatus) async {
+    final updatedLead = lead.copyWith(status: newStatus);
+    await DatabaseService.instance.update(updatedLead);
+    _fetchLeads(); // Refresh list
   }
 
   Future<void> _callLead(String phone) async {
@@ -70,177 +72,216 @@ class _LeadsScreenState extends State<LeadsScreen> {
     }
   }
 
-  void _injectScrapingScript() async {
-    if (webViewController == null || !_isScraping) return;
-
-    // A script to extract results from standard Google Maps search page
-    final script = """
-      (function() {
-        var results = [];
-        // The classes heavily rely on current maps structure, which is fragile
-        // For standard local search page:
-        var elements = document.querySelectorAll('div[role="feed"] > div > div > a');
-        
-        if (elements.length === 0) {
-          // Alternative selector depending on view
-          elements = document.querySelectorAll('.tIqj1b'); 
-        }
-
-        elements.forEach(function(el) {
-           var parent = el.closest('div');
-           if (!parent) return;
-           var textContent = parent.innerText;
-           if (!textContent) return;
-           
-           var nameMatch = textContent.split('\\n')[0];
-           
-           // Simple regex for phone numbers in the text block
-           var phoneRegex = /\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}/g;
-           var phones = textContent.match(phoneRegex);
-           
-           var phoneStr = null;
-           if (phones && phones.length > 0) {
-             // Filter out obvious false positives like hours or short digits
-             var filtered = phones.filter(p => p.length >= 10);
-             if (filtered.length > 0) phoneStr = filtered[0].trim();
-           }
-
-           if (nameMatch && phoneStr && !results.some(r => r.name === nameMatch)) {
-             results.push({ name: nameMatch, phoneNumber: phoneStr, address: textContent });
-           }
-        });
-        
-        // Scroll down to load more
-        var feed = document.querySelector('div[role="feed"]');
-        if (feed) {
-          feed.scrollBy(0, 500);
-        } else {
-          window.scrollBy(0, 500);
-        }
-
-        return JSON.stringify(results);
-      })();
-    """;
-
-    try {
-      final result = await webViewController!.evaluateJavascript(source: script);
-      if (result != null && result is String) {
-        final List<dynamic> parsed = jsonDecode(result);
-        
-        int newLeads = 0;
-        for (var item in parsed) {
-          final lead = Lead.fromMap(item);
-          if (!_leads.any((l) => l.phoneNumber == lead.phoneNumber)) {
-             _leads.add(lead);
-             newLeads++;
-          }
-        }
-        
-        if (newLeads > 0 && mounted) {
-           setState(() {}); // Update UI
-        }
-      }
-    } catch(e) {
-      print("Scraping error: \$e");
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Converted': return Colors.green;
+      case 'Not Converted': return Colors.orange;
+      case 'Bad Lead': return Colors.red;
+      case 'Uncontacted':
+      default: return Colors.grey;
     }
+  }
 
-    // Keep scraping if active
-    if (_isScraping) {
-       Future.delayed(const Duration(seconds: 3), _injectScrapingScript);
-    }
+  void _showStatusDialog(Lead lead) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Status'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _statusOptions
+                .where((status) => status != 'All')
+                .map((status) => ListTile(
+                      title: Text(status),
+                      leading: Icon(Icons.circle, color: _getStatusColor(status), size: 16),
+                      onTap: () {
+                        _updateLeadStatus(lead, status);
+                        Navigator.of(context).pop();
+                      },
+                    ))
+                .toList(),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Generate the URL for Google Maps search
-    final query = Uri.encodeComponent("\$_keyword in \$_location");
-    final searchUrl = 'https://www.google.com/maps/search/\$query';
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Leads for "\$_keyword"'),
+        title: const Text('My Leads Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchLeads,
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Hidden WebView for Scraping
-          SizedBox(
-            height: 1, 
-            width: 1, 
-            child: InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri(searchUrl)),
-              onWebViewCreated: (controller) {
-                webViewController = controller;
-              },
-              onLoadStop: (controller, url) {
-                if (_isScraping) {
-                   Future.delayed(const Duration(seconds: 2), _injectScrapingScript);
-                }
-              },
-            ),
-          ),
-
-          if (_isScraping) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Found: \${_leads.length} leads', style: const TextStyle(fontWeight: FontWeight.bold)),
-                if (_isScraping)
-                  TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _isScraping = false;
-                      });
-                    },
-                    icon: const Icon(Icons.stop),
-                    label: const Text('Stop Scraping'),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _leads.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text('Searching Google Maps for "\$_keyword"...'),
-                      ],
+          // Filter Row
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: _statusOptions.map((status) {
+                  final isSelected = _selectedStatus == status;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: FilterChip(
+                      label: Text(status),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedStatus = status;
+                        });
+                        _fetchLeads();
+                      },
+                      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                      labelStyle: TextStyle(
+                        color: isSelected 
+                            ? Theme.of(context).colorScheme.onPrimaryContainer
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    itemCount: _leads.length,
-                    itemBuilder: (context, index) {
-                      final lead = _leads[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: ListTile(
-                          title: Text(lead.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(lead.phoneNumber ?? lead.address ?? 'No contact info'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.call, color: Colors.green),
-                                onPressed: lead.phoneNumber != null 
-                                    ? () => _callLead(lead.phoneNumber!)
-                                    : null,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.message, color: Colors.teal),
-                                onPressed: lead.phoneNumber != null
-                                    ? () => _whatsappLead(lead)
-                                    : null,
-                              ),
-                            ],
-                          ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _leads.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No leads found for "\$_selectedStatus".\nGo to Discover to fetch new leads!',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey, fontSize: 16),
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        itemCount: _leads.length,
+                        padding: const EdgeInsets.all(12),
+                        itemBuilder: (context, index) {
+                          final lead = _leads[index];
+                          return Card(
+                            elevation: 3,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Header: Name and Status Badge
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          lead.name,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(lead.status).withAlpha(25),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: _getStatusColor(lead.status)),
+                                        ),
+                                        child: Text(
+                                          lead.status,
+                                          style: TextStyle(
+                                            color: _getStatusColor(lead.status),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  
+                                  // Details
+                                  if (lead.phoneNumber != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.phone, size: 16, color: Colors.grey),
+                                          const SizedBox(width: 8),
+                                          Text(lead.phoneNumber!, style: const TextStyle(fontSize: 14)),
+                                        ],
+                                      ),
+                                    ),
+                                  if (lead.address != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                                          const SizedBox(width: 8),
+                                          Expanded(child: Text(lead.address!, style: const TextStyle(fontSize: 14, color: Colors.grey))),
+                                        ],
+                                      ),
+                                    ),
+                                  if (lead.website != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 12),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.language, size: 16, color: Colors.grey),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              lead.website!, 
+                                              style: const TextStyle(fontSize: 14, color: Colors.blue, decoration: TextDecoration.underline),
+                                              overflow: TextOverflow.ellipsis,
+                                            )
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                  const Divider(),
+                                  
+                                  // Action Buttons
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: lead.phoneNumber != null ? () => _callLead(lead.phoneNumber!) : null,
+                                        icon: const Icon(Icons.call, color: Colors.green),
+                                        label: const Text('Call'),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: lead.phoneNumber != null ? () => _whatsappLead(lead) : null,
+                                        icon: const Icon(Icons.message, color: Colors.teal),
+                                        label: const Text('WhatsApp'),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: () => _showStatusDialog(lead),
+                                        icon: const Icon(Icons.edit, color: Colors.orange),
+                                        label: const Text('Status'),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),

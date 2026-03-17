@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/leads_screen.dart';
-import 'screens/templates_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +17,7 @@ class LeadGeneratorApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomeScreen(),
-        '/leads': (context) => const LeadsScreen(),
-        '/templates': (context) => const TemplatesScreen(),
-      },
+      home: const MainScreen(),
     );
   }
 }
