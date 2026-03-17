@@ -1,0 +1,14 @@
+workflows:
+  android-local-debug:
+    name: Android Debug Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    scripts:
+      - name: Flutter packages get
+        script: flutter packages pub get
+      - name: Build Android Debug APK
+        script: flutter build apk --debug
+    artifacts:
+      - build/app/outputs/flutter-apk/app-debug.apk
