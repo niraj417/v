@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/lead.dart';
 import '../services/database_service.dart';
 
@@ -72,6 +75,58 @@ class _LeadsScreenState extends State<LeadsScreen> {
     }
   }
 
+  Future<void> _exportLeads() async {
+    if (_leads.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No leads to export.')),
+      );
+      return;
+    }
+    
+    try {
+      List<List<dynamic>> rows = [];
+      // Header row
+      rows.add(["Name", "Phone", "Address", "Website", "Status", "Rating"]);
+      
+      // Data rows
+      for (var lead in _leads) {
+        rows.add([
+          lead.name,
+          lead.phoneNumber ?? '',
+          lead.address ?? '',
+          lead.website ?? '',
+          lead.status,
+          lead.rating ?? ''
+        ]);
+      }
+      
+      String csvData = rows.map((row) {
+        return row.map((field) {
+          String stringField = field.toString();
+          if (stringField.contains(',') || stringField.contains('"') || stringField.contains('\n')) {
+            return '"${stringField.replaceAll('"', '""')}"';
+          }
+          return stringField;
+        }).join(',');
+      }).join('\n');
+      
+      final directory = await getTemporaryDirectory();
+      final path = '${directory.path}/leads_export.csv';
+      final file = File(path);
+      await file.writeAsString(csvData);
+      
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([XFile(path)], text: 'Exported Leads');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to export leads: $e')),
+        );
+      }
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Converted': return Colors.green;
@@ -114,8 +169,14 @@ class _LeadsScreenState extends State<LeadsScreen> {
         title: const Text('My Leads Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _exportLeads,
+            tooltip: 'Export CSV',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _fetchLeads,
+            tooltip: 'Refresh Leads',
           ),
         ],
       ),
